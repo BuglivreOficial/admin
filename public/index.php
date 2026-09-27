@@ -4,7 +4,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 try {
     $ip = (new \Core\Request())->get_cloudflare_ip();
-    dump($ip);
+    //dump($ip);
     //------ Sistema de roteamento ------//
     $router = new \Core\Routing();
     $router->group('/api', function ($router) {
