@@ -31,6 +31,7 @@ class ComposerStaticInit17103f55ef82a2add4088b527eb4bb48
         array (
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Http\\Client\\' => 16,
+            'Predis\\' => 7,
             'PhpOption\\' => 10,
             'PHPMailer\\PHPMailer\\' => 20,
         ),
@@ -101,6 +102,10 @@ class ComposerStaticInit17103f55ef82a2add4088b527eb4bb48
         'Psr\\Http\\Client\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/http-client/src',
+        ),
+        'Predis\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/predis/predis/src',
         ),
         'PhpOption\\' =>
         array (

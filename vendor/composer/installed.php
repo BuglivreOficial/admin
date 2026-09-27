@@ -118,6 +118,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'predis/predis' => array(
+            'pretty_version' => 'v3.6.1',
+            'version' => '3.6.1.0',
+            'reference' => 'e2db96312ecf57a01a3477bf192d1ebc0ad7e9fb',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../predis/predis',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'psr/http-client' => array(
             'pretty_version' => '1.0.3',
             'version' => '1.0.3.0',
