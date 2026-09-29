@@ -2,11 +2,19 @@
 namespace Core;
 
 use Core\Exceptions\RoutingException;
+use Core\Logger;
+use Core\Response;
 
 class Routing {
     private string $prefix = '';
     private array $routes = [];
+    private Logger $logger;
+    private Response $response;
 
+    public function __construct() {
+        $this->logger = new Logger('routing');
+        $this->response = new Response();
+    }
     public function get(string $path, callable|array $callback): void {
         $this->match('GET', $path, $callback);
     }
@@ -57,15 +65,17 @@ class Routing {
         $httpMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
         if (!isset($this->routes[$uri])) {
-            throw new RoutingException(
-                'O servidor não consegue encontrar o recurso solicitado.)',
-                404,
-            );
+            throw new RoutingException("A rota $uri não existe.", 404);
         }
         if (!isset($this->routes[$uri][$httpMethod])) {
-            throw new RoutingException(
-                'O método de requisição é conhecido pelo servidor, mas não é suportado pelo recurso de destino.',
-                405,
+            $this->logger->info("Rota $uri existe mais método $httpMethod não aceito", []);
+            $this->response->json(
+                [
+                    'status' => false,
+                    'message' => 'Rota existe mais método não aceito.',
+                    'created_at' => date('d/m/Y H:i:s'),
+                ],
+                403,
             );
         }
 

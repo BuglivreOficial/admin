@@ -1,33 +1,30 @@
 <?php
 
 require dirname(__DIR__) . '/vendor/autoload.php';
+require dirname(__DIR__) . '/config/app.php';
 
-// ====== CAPTURA DE IP E GRAVAÇÃO NO REDIS (BLINDADO) ======
+// ====== CAPTURA DE IP E GRAVAÇÃO NO REDIS ======
 try {
-    $ip = (new Request())->get_cloudflare_ip();
-
-    if (filter_var($ip, FILTER_VALIDATE_IP) && $ip !== '0.0.0.0') {
-        // Recupera a instância Singleton do Redis
-        $redisInstance = \Core\Database\Redis::getInstance();
-        $redis = $redisInstance->getClient();
-
-        // Se a conexão foi bem-sucedida, envia os comandos
-        if ($redis !== null) {
-            $redis->sadd('site:visitantes_recentes', $ip);
-            $redis->expire('site:visitantes_recentes', 86400); // 24 horas
-        }
+    $ip = \Core\Request::get_cloudflare_ip();
+    $redis = \Core\Database\Redis::getInstance()->getClient();
+    // Se a conexão foi bem-sucedida
+    if ($redis !== null) {
+        $redis->sadd('site:visitantes_' . date('d'), $ip);
+        $redis->expire('site:visitantes_recentes', 86400); // 24 horas
     }
 } catch (\Throwable $e) {
-    // Captura qualquer erro do Redis/Predis e evita o crash da API
-    // Escreve apenas no arquivo de log padrão do PHP (ex: error_log do Nginx/Apache)
+    echo 'kkkk';
     error_log('Falha silenciosa ao registrar IP no Redis: ' . $e->getMessage());
 }
 
 try {
-    //------ Sistema de roteamento ------//
+    //====== SISTEMA DE ROTEAMENTO ======
     $router = new \Core\Routing();
     $router->group('/api', function ($router) {
         require dirname(__DIR__) . '/router/api.php';
+    });
+    $router->group('/app', function ($router) {
+        require dirname(__DIR__) . '/router/web.php';
     });
     $router->start();
 } catch (\Core\Exceptions\RoutingException $e) {
@@ -37,6 +34,9 @@ try {
             break;
         case 405:
             response(false, 'Rota não existe', $e->getCode());
+            break;
+        default:
+            response(false, 'Error! tente novamente mais tarde!', 500);
             break;
     }
 } catch (\Exception $e) {
