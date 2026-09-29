@@ -2,11 +2,15 @@
 
 namespace Core;
 
+use Core\Database\Redis;
+
 class Logger {
     private string $service;
+    private $redis;
 
     public function __construct(string $service) {
         $this->service = $service;
+        $this->redis = Redis::getInstance()->getClient();
     }
     public function debug(string $message, array $context = []) {
         $this->create('debug', $message, $context);
@@ -33,20 +37,29 @@ class Logger {
         $this->create('emergency', $message, $context);
     }
     private function create(string $level, string $message, array $context) {
-        $traceId = $_SERVER['HTTP_X_TRACE_ID'] ?? uniqid('trace_', true);
-        $ip = \Core\Request::get_cloudflare_ip();
-        $logData = [
-            'timestamp' => gmdate('Y-m-d\TH:i:s\Z'), // Padrão ISO 8601 em UTC
-            'level' => strtoupper($level),
-            'service' => $this->service,
-            'trace_id' => $traceId,
-            'ip' => $ip,
-            'message' => $message,
-        ];
-        // Adiciona metadados se existirem
-        if (!empty($context)) {
-            $logData['metadata'] = $context;
+        try {
+            $traceId = $_SERVER['HTTP_X_TRACE_ID'] ?? uniqid('trace_', true);
+            $ip = \Core\Request::get_cloudflare_ip();
+            $logData = [
+                'timestamp' => gmdate('Y-m-d\TH:i:s\Z'), // Padrão ISO 8601 em UTC
+                'level' => strtoupper($level),
+                'service' => $this->service,
+                'trace_id' => $traceId,
+                'ip' => $ip,
+                'message' => $message,
+            ];
+            // Adiciona metadados se existirem
+            if (!empty($context)) {
+                $logData['metadata'] = $context;
+            }
+            $json = json_encode($logData);
+
+            // Se a conexão foi bem-sucedida
+            if ($redis !== null) {
+                $redis->rpush('sistema:logs', $json);
+            }
+        } catch (\Throwable $e) {
+            error_log('Falha silenciosa ao registrar IP no Redis: ' . $e->getMessage());
         }
-        dump($logData);
     }
 }

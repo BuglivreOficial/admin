@@ -13,7 +13,6 @@ try {
         $redis->expire('site:visitantes_recentes', 86400); // 24 horas
     }
 } catch (\Throwable $e) {
-    echo 'kkkk';
     error_log('Falha silenciosa ao registrar IP no Redis: ' . $e->getMessage());
 }
 
