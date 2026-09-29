@@ -55,8 +55,8 @@ class Logger {
             $json = json_encode($logData);
 
             // Se a conexão foi bem-sucedida
-            if ($redis !== null) {
-                $redis->rpush('sistema:logs', $json);
+            if ($this->redis !== null) {
+                $this->redis->rpush('sistema:logs', $json);
             }
         } catch (\Throwable $e) {
             error_log('Falha silenciosa ao registrar IP no Redis: ' . $e->getMessage());
