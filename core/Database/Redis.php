@@ -16,9 +16,19 @@ class Redis {
     // Construtor privado impede a criação de instâncias via "new" fora da classe
     private function __construct() {
         try {
-            $this->client = new Client(
-                'rediss://default:gQAAAAAABNQoAAIgcDI3ZjQ3MTAxMTZlMjY0M2VjYTMwNjVmNTNlNzY5Njc2OQ@divine-gecko-316456.upstash.io:6379',
-            );
+            if ($_SERVER['SERVER_NAME'] == 'localhost') {
+                $this->client = new Client([
+                    'scheme' => 'tcp',
+                    'host' => '127.0.0.1',
+                    'port' => 6379,
+                    'password' => '',
+                    'database' => 0,
+                ]);
+            } else {
+                $this->client = new Client(
+                    'rediss://default:gQAAAAAABNQoAAIgcDI3ZjQ3MTAxMTZlMjY0M2VjYTMwNjVmNTNlNzY5Njc2OQ@divine-gecko-316456.upstash.io:6379',
+                );
+            }
 
             // Força a conexão imediata para validar se o servidor está online
             $this->client->connect();

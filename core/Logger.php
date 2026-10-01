@@ -38,19 +38,21 @@ class Logger {
     }
     private function create(string $level, string $message, array $context) {
         try {
-            $traceId = $_SERVER['HTTP_X_TRACE_ID'] ?? uniqid('trace_', true);
-            $ip = \Core\Request::get_cloudflare_ip();
             $logData = [
-                'timestamp' => gmdate('Y-m-d\TH:i:s\Z'), // Padrão ISO 8601 em UTC
                 'level' => strtoupper($level),
                 'service' => $this->service,
-                'trace_id' => $traceId,
-                'ip' => $ip,
                 'message' => $message,
+                'metadata' => [
+                    'ip' => IP,
+                    'method_http' => METHOD_HTTP,
+                    'url' => parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/CLI',
+                    'request_id' => REQUEST_ID,
+                    'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
+                ],
             ];
             // Adiciona metadados se existirem
             if (!empty($context)) {
-                $logData['metadata'] = $context;
+                $logData['context'] = $context;
             }
             $json = json_encode($logData);
 

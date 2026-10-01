@@ -48,10 +48,18 @@ class Routing {
             $function = $callback[1];
             $callable = null;
             if (!class_exists($controller)) {
-                throw new RoutingException("Classe da rota {$fullPath} não existe.", 500);
+                $this->logger->critical(
+                    "A classe ```$controller``` da rota ```$fullPath``` não existe ou não foi declarada",
+                );
+                $this->response->error_interno();
+                exit();
             }
             if (!method_exists($controller, $function)) {
-                throw new RoutingException("Método da classe na rota {$fullPath} não existe.", 500);
+                $this->logger->critical(
+                    "A classe ```$controller``` da rota ```$fullPath``` existe mais o método ```$function``` não existe",
+                );
+                $this->response->error_interno();
+                exit();
             }
         }
         $this->routes[$fullPath][$method] = [
@@ -61,19 +69,25 @@ class Routing {
         ];
     }
     public function start(): void {
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/faaaaaAAAAAA';
+        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/CLI';
         $httpMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
         if (!isset($this->routes[$uri])) {
-            throw new RoutingException("A rota $uri não existe.", 404);
+            $this->logger->info("A rota ```$uri``` não existe");
+            $this->response->json(
+                [
+                    'status' => false,
+                    'message' => 'A rota não existe.',
+                ],
+                404,
+            );
         }
         if (!isset($this->routes[$uri][$httpMethod])) {
-            $this->logger->info("Rota $uri existe mais método $httpMethod não aceito", []);
+            $this->logger->info("Rota ```$uri``` existe mais método ```$httpMethod``` não aceito");
             $this->response->json(
                 [
                     'status' => false,
                     'message' => 'Rota existe mais método não aceito.',
-                    'created_at' => date('d/m/Y H:i:s'),
                 ],
                 403,
             );

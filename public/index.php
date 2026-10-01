@@ -3,17 +3,24 @@
 require dirname(__DIR__) . '/vendor/autoload.php';
 require dirname(__DIR__) . '/config/app.php';
 
+dump($_SERVER['SERVER_NAME']);
+$logRedis = new \Core\Logger('redis');
+
 // ====== CAPTURA DE IP E GRAVAÇÃO NO REDIS ======
 try {
-    $ip = \Core\Request::get_cloudflare_ip();
     $redis = \Core\Database\Redis::getInstance()->getClient();
     // Se a conexão foi bem-sucedida
     if ($redis !== null) {
-        $redis->sadd('site:visitantes_' . date('d'), $ip);
+        $redis->sadd('site:visitantes_' . date('d'), IP);
         $redis->expire('site:visitantes_recentes', 86400); // 24 horas
     }
 } catch (\Throwable $e) {
-    error_log('Falha silenciosa ao registrar IP no Redis: ' . $e->getMessage());
+    $logRedis->critical('Falha ao registrar IP no Redis', [
+        'line' => '9 a 21',
+        'file' => '/public/index.php',
+        'error' => $e->getMessage(),
+        'exception' => $e,
+    ]);
 }
 
 try {
@@ -26,18 +33,6 @@ try {
         require dirname(__DIR__) . '/router/web.php';
     });
     $router->start();
-} catch (\Core\Exceptions\RoutingException $e) {
-    switch ($e->getCode()) {
-        case 404:
-            response(false, 'Rota não existe', $e->getCode());
-            break;
-        case 405:
-            response(false, 'Rota não existe', $e->getCode());
-            break;
-        default:
-            response(false, 'Error! tente novamente mais tarde!', 500);
-            break;
-    }
 } catch (\Exception $e) {
     response(false, 'Error! tente novamente mais tarde!', 500);
 }
@@ -47,8 +42,14 @@ function response(bool $status, string $message, int $status_code) {
         [
             'status' => $status,
             'message' => $message,
-            'created_at' => date('d/m/Y H:i:s'),
         ],
         $status_code,
     );
+}
+
+function generateUuidV4() {
+    $data = random_bytes(16);
+    $data[6] = chr((ord($data[6]) & 0x0f) | 0x40); // Define a versão como 4
+    $data[8] = chr((ord($data[8]) & 0x3f) | 0x80); // Define a variante
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
