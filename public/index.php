@@ -8,7 +8,7 @@ $logRedis = new \Core\Logger('redis');
 
 // ====== CAPTURA DE IP E GRAVAÇÃO NO REDIS ======
 try {
-    $redis = \Core\Database\Redis::getInstance()->getClient();
+    $redis = \Core\Database\Redi::getInstance()->getClient();
     // Se a conexão foi bem-sucedida
     if ($redis !== null) {
         $redis->sadd('site:visitantes_' . date('d'), IP);
