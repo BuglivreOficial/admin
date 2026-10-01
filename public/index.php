@@ -3,7 +3,7 @@
 require dirname(__DIR__) . '/vendor/autoload.php';
 require dirname(__DIR__) . '/config/app.php';
 
-dump($_SERVER['SERVER_NAME']);
+//dump($_SERVER['SERVER_NAME']);
 $logRedis = new \Core\Logger('redis');
 
 // ====== CAPTURA DE IP E GRAVAÇÃO NO REDIS ======
